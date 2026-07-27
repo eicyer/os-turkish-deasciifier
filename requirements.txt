@@ -1,0 +1,3 @@
+rumps
+pynput
+git+https://github.com/emres/turkish-deasciifier.git
