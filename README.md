@@ -49,6 +49,19 @@ python app.py
 You should see `TR·off` appear in your menu bar. Click it and check
 **Enabled** to turn correction on.
 
+### Relaunching after Quit
+
+Clicking **Quit** in the menu fully exits the app (that's intentional — see
+`quit_app` in `app.py`), which also removes the `TR·off`/`TR·on` menu bar
+item. Since this isn't a packaged `.app`, there's no Dock/Finder icon left
+to click afterward. To get back in without retyping the Terminal commands,
+double-click **`TurkishAutocorrect.command`** in Finder — it `cd`s into the
+project folder, activates `venv`, and starts `app.py` for you (it opens a
+Terminal window, which you can close once the menu bar icon appears).
+
+You can also drag `TurkishAutocorrect.command` into **System Settings →
+General → Login Items** so it starts automatically when you log in.
+
 The first time it runs, macOS will block the global keystroke listener
 until you grant permissions (see below) — you'll likely get a system
 prompt, or correction will just silently do nothing until you grant access
