@@ -49,18 +49,50 @@ python app.py
 You should see `TR·off` appear in your menu bar. Click it and check
 **Enabled** to turn correction on.
 
-### Relaunching after Quit
+### Running automatically in the background (recommended)
 
-Clicking **Quit** in the menu fully exits the app (that's intentional — see
-`quit_app` in `app.py`), which also removes the `TR·off`/`TR·on` menu bar
-item. Since this isn't a packaged `.app`, there's no Dock/Finder icon left
-to click afterward. To get back in without retyping the Terminal commands,
-double-click **`TurkishAutocorrect.command`** in Finder — it `cd`s into the
-project folder, activates `venv`, and starts `app.py` for you (it opens a
-Terminal window, which you can close once the menu bar icon appears).
+Instead of launching `app.py` by hand every time, you can register it as a
+per-user **LaunchAgent** so macOS starts it automatically at login and
+relaunches it (`KeepAlive`) if it ever crashes:
 
-You can also drag `TurkishAutocorrect.command` into **System Settings →
-General → Login Items** so it starts automatically when you log in.
+```bash
+./install-launchagent.sh
+```
+
+This writes `~/Library/LaunchAgents/com.github.eicyer.tr-autocorrect.plist`
+and starts it immediately — `TR·off` should appear in the menu bar within a
+few seconds, no Terminal window needed from then on.
+
+**This changes what Quit does.** Because `launchd` would otherwise respawn
+the process the instant it exits, clicking **Quit** now also unloads/disables
+the LaunchAgent (see `_unload_launch_agent` in `app.py`) so it actually stays
+stopped, rather than exiting and immediately bouncing back. To bring it back
+after Quit, either double-click **`TurkishAutocorrect.command`** (it detects
+the installed LaunchAgent and reloads it) or re-run
+`./install-launchagent.sh`.
+
+Trade-offs of running this way, worth knowing:
+- Accessibility/Input Monitoring permissions are effectively granted
+  continuously, not just while you have it open.
+- A small amount of CPU/memory stays resident all the time, even when
+  **Enabled** is off.
+- If the app fails at startup, `launchd` retries every ~10s
+  (`ThrottleInterval`) rather than looping instantly.
+- There's no attached Terminal window, so errors go to
+  `tr-autocorrect.log` in this folder instead of stdout — check there if
+  something's not working.
+
+To fully remove the LaunchAgent (stop it and prevent it from returning at
+login):
+
+```bash
+./uninstall-launchagent.sh
+```
+
+If you'd rather not run it as a background daemon at all, just run
+`python app.py` manually each time (see below) — in that mode Quit is a
+plain process exit like before, and `TurkishAutocorrect.command` falls back
+to relaunching it directly.
 
 The first time it runs, macOS will block the global keystroke listener
 until you grant permissions (see below) — you'll likely get a system
