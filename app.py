@@ -15,7 +15,6 @@ import subprocess
 import threading
 
 import rumps
-from pynput import keyboard
 from pynput.keyboard import Controller, Key, Listener
 from turkish.deasciifier import Deasciifier
 
@@ -34,6 +33,13 @@ LAUNCH_AGENT_PLIST = os.path.expanduser(
 
 
 class TurkishAutocorrectApp(rumps.App):
+    """Menu bar app that live-corrects ASCII-typed Turkish system-wide.
+
+    Shows ``TR·on`` / ``TR·off`` in the menu bar. While enabled, a global
+    keystroke listener buffers the word being typed and replaces it with
+    its deasciified form at each word boundary.
+    """
+
     def __init__(self):
         super().__init__("TR·off", quit_button=None)
 
@@ -58,6 +64,7 @@ class TurkishAutocorrectApp(rumps.App):
     # -- menu bar --------------------------------------------------------
 
     def toggle(self, sender):
+        """Flip correction on/off and reset the word buffer."""
         self.enabled = not self.enabled
         sender.state = self.enabled
         with self.buffer_lock:
@@ -65,6 +72,7 @@ class TurkishAutocorrectApp(rumps.App):
         self.title = "TR·on" if self.enabled else "TR·off"
 
     def quit_app(self, sender):
+        """Stop the listener, unload the LaunchAgent, and exit the process."""
         self.listener.stop()
         self._unload_launch_agent()
         # rumps.quit_application() just calls NSApplication.terminate_(),
@@ -74,6 +82,7 @@ class TurkishAutocorrectApp(rumps.App):
         os._exit(0)
 
     def _unload_launch_agent(self):
+        """Disable the KeepAlive LaunchAgent so Quit actually stays quit."""
         # If we're running as the KeepAlive LaunchAgent (see
         # install-launchagent.sh), launchd will instantly relaunch us the
         # moment this process exits unless we tell it to stop first. If
@@ -97,6 +106,11 @@ class TurkishAutocorrectApp(rumps.App):
     # -- keystroke handling ----------------------------------------------
 
     def on_press(self, key):
+        """pynput callback for every global key press.
+
+        Runs on the listener thread; must never raise, or the listener dies
+        silently and correction stops working until restart.
+        """
         # Ignore keystrokes we generate ourselves (backspace/retype),
         # otherwise we'd re-buffer our own corrected output.
         if self.injecting:
@@ -112,6 +126,7 @@ class TurkishAutocorrectApp(rumps.App):
                 self.buffer = ""
 
     def _handle_key(self, key):
+        """Buffer word characters; flush or reset on everything else."""
         char = getattr(key, "char", None)
 
         if char is not None:
@@ -143,6 +158,12 @@ class TurkishAutocorrectApp(rumps.App):
                 self.buffer = ""
 
     def flush_word(self, boundary_char=None, boundary_key=None):
+        """Deasciify the buffered word and replace it in-place if it changed.
+
+        ``boundary_char``/``boundary_key`` is the keystroke that ended the
+        word (space, punctuation, enter, ...); it's passed along so the
+        replacement can retype it after the corrected word.
+        """
         with self.buffer_lock:
             word, self.buffer = self.buffer, ""
 
@@ -154,6 +175,8 @@ class TurkishAutocorrectApp(rumps.App):
             self.inject_replacement(word, corrected, boundary_char, boundary_key)
 
     def inject_replacement(self, original, corrected, boundary_char=None, boundary_key=None):
+        """Backspace over ``original`` (plus the boundary keystroke) and
+        type ``corrected`` followed by the boundary keystroke."""
         self.injecting = True
         try:
             # +1 to also remove the boundary keystroke (space/tab/enter/
