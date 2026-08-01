@@ -63,36 +63,36 @@ This writes `~/Library/LaunchAgents/com.github.eicyer.tr-autocorrect.plist`
 and starts it immediately — `TR·off` should appear in the menu bar within a
 few seconds, no Terminal window needed from then on.
 
-**This changes what Quit does.** Because `launchd` would otherwise respawn
-the process the instant it exits, clicking **Quit** now also unloads/disables
-the LaunchAgent (see `_unload_launch_agent` in `app.py`) so it actually stays
-stopped, rather than exiting and immediately bouncing back. To bring it back
-after Quit, either double-click **`TurkishAutocorrect.command`** (it detects
-the installed LaunchAgent and reloads it) or re-run
-`./install-launchagent.sh`.
+**The menu bar icon is meant to stay put.** Clicking **Quit** doesn't exit
+the process or touch the LaunchAgent — it just disables correction (same as
+unchecking **Enabled**), so the icon is always there to turn it back on. To
+actually stop the background process (e.g. before uninstalling or updating
+the code), use:
+
+```bash
+./uninstall-launchagent.sh
+```
+
+which stops it and removes the plist so it won't come back at next login
+either. Re-run `./install-launchagent.sh` (or double-click
+`TurkishAutocorrect.command`) to bring it back.
 
 Trade-offs of running this way, worth knowing:
 - Accessibility/Input Monitoring permissions are effectively granted
   continuously, not just while you have it open.
 - A small amount of CPU/memory stays resident all the time, even when
-  **Enabled** is off.
+  **Enabled** is off — and now, since Quit no longer exits the process
+  either, that's true until you explicitly uninstall it.
 - If the app fails at startup, `launchd` retries every ~10s
   (`ThrottleInterval`) rather than looping instantly.
 - There's no attached Terminal window, so errors go to
   `tr-autocorrect.log` in this folder instead of stdout — check there if
   something's not working.
 
-To fully remove the LaunchAgent (stop it and prevent it from returning at
-login):
-
-```bash
-./uninstall-launchagent.sh
-```
-
 If you'd rather not run it as a background daemon at all, just run
-`python app.py` manually each time (see below) — in that mode Quit is a
-plain process exit like before, and `TurkishAutocorrect.command` falls back
-to relaunching it directly.
+`python app.py` manually each time (see below) — Quit behaves the same way
+(disables correction, keeps the icon), so to stop it you'll need `Ctrl+C` in
+the Terminal window it's running in.
 
 The first time it runs, macOS will block the global keystroke listener
 until you grant permissions (see below) — you'll likely get a system

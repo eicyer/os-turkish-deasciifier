@@ -10,8 +10,6 @@ Requires macOS "Accessibility" and "Input Monitoring" permissions for the
 process running this script (see README.md).
 """
 
-import os
-import subprocess
 import threading
 
 import rumps
@@ -25,12 +23,6 @@ from turkish.deasciifier import Deasciifier
 WORD_CHARS_EXTRA = "'"
 
 BOUNDARY_KEYS = (Key.space, Key.enter, Key.tab)
-
-# Must match the Label/plist filename install-launchagent.sh generates.
-LAUNCH_AGENT_LABEL = "com.github.eicyer.tr-autocorrect"
-LAUNCH_AGENT_PLIST = os.path.expanduser(
-    f"~/Library/LaunchAgents/{LAUNCH_AGENT_LABEL}.plist"
-)
 
 
 class TurkishAutocorrectApp(rumps.App):
@@ -65,34 +57,16 @@ class TurkishAutocorrectApp(rumps.App):
         self.title = "TR·on" if self.enabled else "TR·off"
 
     def quit_app(self, sender):
-        self.listener.stop()
-        self._unload_launch_agent()
-        # rumps.quit_application() just calls NSApplication.terminate_(),
-        # which for a plain (non-bundled) script can tear down the menu bar
-        # icon without actually killing the process — leaving the keystroke
-        # listener running invisibly in the background. Force the issue.
-        os._exit(0)
-
-    def _unload_launch_agent(self):
-        # If we're running as the KeepAlive LaunchAgent (see
-        # install-launchagent.sh), launchd will instantly relaunch us the
-        # moment this process exits unless we tell it to stop first. If
-        # we're just a plain `python app.py` run with no LaunchAgent
-        # installed, both commands fail harmlessly and Quit behaves as a
-        # normal exit.
-        if not os.path.exists(LAUNCH_AGENT_PLIST):
-            return
-        uid = os.getuid()
-        target = f"gui/{uid}/{LAUNCH_AGENT_LABEL}"
-        result = subprocess.run(
-            ["launchctl", "bootout", target],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            subprocess.run(
-                ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST],
-                capture_output=True,
-            )
+        # The menu bar icon is meant to stay put — "Quit" just disables
+        # correction (like unchecking Enabled) rather than exiting the
+        # process, so you're never stuck without a menu to re-enable from.
+        # To actually stop the background process, use
+        # uninstall-launchagent.sh (or Ctrl+C if running app.py manually).
+        self.enabled = False
+        self.toggle_item.state = False
+        with self.buffer_lock:
+            self.buffer = ""
+        self.title = "TR·off"
 
     # -- keystroke handling ----------------------------------------------
 

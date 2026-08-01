@@ -1,11 +1,12 @@
 #!/bin/bash
 # Double-click this in Finder to bring the Turkish autocorrect menu bar
-# icon back after Quit, without needing to open Terminal yourself.
+# icon back, without needing to open Terminal yourself. Quit no longer
+# removes the icon (it just disables correction — see app.py), so this is
+# mainly for: the LaunchAgent isn't installed yet, it was stopped via
+# uninstall-launchagent.sh, or it crashed and KeepAlive hasn't caught up.
 #
 # If the LaunchAgent from install-launchagent.sh is installed, this just
-# reloads it (Quit unloads/disables it — see app.py — so it won't come
-# back on its own). Otherwise it falls back to a direct `python app.py`
-# run, same as before the LaunchAgent existed.
+# (re)loads it. Otherwise it falls back to a direct `python app.py` run.
 
 set -e
 cd "$(dirname "$0")"
