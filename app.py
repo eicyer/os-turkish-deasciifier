@@ -93,16 +93,32 @@ def _uninstall_launch_agent():
     os.remove(LAUNCH_AGENT_PLIST_PATH)
 
 
+def _resource_path(name):
+    """Locate a bundled resource, whether running as a packaged .app
+    (resources live in Contents/Resources, next to Contents/MacOS) or a
+    source checkout (resources/ next to app.py)."""
+    if getattr(sys, "frozen", False):
+        base = os.path.join(os.path.dirname(sys.executable), "..", "Resources")
+    else:
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
+    return os.path.normpath(os.path.join(base, name))
+
+
+ICON_ON = _resource_path("icon-on.png")
+ICON_OFF = _resource_path("icon-off.png")
+
+
 class TurkishAutocorrectApp(rumps.App):
     """Menu bar app that live-corrects ASCII-typed Turkish system-wide.
 
-    Shows ``TR·on`` / ``TR·off`` in the menu bar. While enabled, a global
-    keystroke listener buffers the word being typed and replaces it with
-    its deasciified form at each word boundary.
+    Shows a "ğ" template icon in the menu bar — solid when enabled, dimmed
+    when off. While enabled, a global keystroke listener buffers the word
+    being typed and replaces it with its deasciified form at each word
+    boundary.
     """
 
     def __init__(self):
-        super().__init__("TR·off", quit_button=None)
+        super().__init__("", icon=ICON_OFF, template=True, quit_button=None)
 
         self.enabled = False
         self.buffer = ""
@@ -136,7 +152,7 @@ class TurkishAutocorrectApp(rumps.App):
         sender.state = self.enabled
         with self.buffer_lock:
             self.buffer = ""
-        self.title = "TR·on" if self.enabled else "TR·off"
+        self.icon = ICON_ON if self.enabled else ICON_OFF
 
     def toggle_start_at_login(self, sender):
         """Register/unregister the self-referencing login LaunchAgent."""
@@ -167,7 +183,7 @@ class TurkishAutocorrectApp(rumps.App):
         self.toggle_item.state = False
         with self.buffer_lock:
             self.buffer = ""
-        self.title = "TR·off"
+        self.icon = ICON_OFF
 
     # -- keystroke handling ----------------------------------------------
 

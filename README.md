@@ -15,10 +15,11 @@ it instantly becomes:
 
 It works everywhere on your Mac — in your browser, in Mail, in WhatsApp, in
 any app. You turn it on and off with a single click from the menu bar (the
-row of small icons at the top-right of your screen).
+row of small icons at the top-right of your screen), where it shows up as
+a small **ğ** — the very letter this app adds for you.
 
-- **TR·off** in the menu bar means it's currently doing nothing.
-- **TR·on** means it's actively correcting as you type.
+- A faint, dimmed **ğ** means it's currently doing nothing.
+- A solid, dark **ğ** means it's actively correcting as you type.
 
 When it's off, your typing is completely untouched.
 
@@ -38,8 +39,8 @@ When it's off, your typing is completely untouched.
      Security**, scroll down to the security notice near the bottom, and
      click **Open Anyway**, then confirm **Open** in the dialog that
      appears. You only need to do this once.
-4. You should see `TR·off` appear in the menu bar. Click it and check
-   **Enabled** to turn correction on. 🎉
+4. You should see a dimmed **ğ** appear in the menu bar. Click it and check
+   **Enabled** to turn correction on — the icon turns solid. 🎉
 5. The first time it tries to listen to your keystrokes, macOS will ask for
    two permissions — click **Open System Settings** on each prompt (or go
    there manually) and turn **TurkishAutocorrect** on under:
@@ -57,11 +58,11 @@ source.
 
 ## Using it
 
-1. Click **TR·off** in the menu bar.
-2. Check **Enabled** — the title changes to **TR·on**.
+1. Click the **ğ** icon in the menu bar.
+2. Check **Enabled** — the icon turns solid.
 3. Type anywhere — words are corrected the moment you press space, enter,
    or punctuation.
-4. To pause it, uncheck **Enabled** again (back to **TR·off**).
+4. To pause it, uncheck **Enabled** again (the icon dims back down).
 5. **Quit** disables correction but leaves the icon in the menu bar, so
    you're never stuck without a way to turn it back on — it doesn't fully
    exit the app. If you enabled **Start at Login**, the background process
@@ -107,8 +108,9 @@ Open the **TextEdit** app, start a new document, and type
 
 ## Ideas for later
 
-- Custom `.icns` app icon (currently uses py2app's generic default).
-- A proper menu bar icon instead of the `TR·on` / `TR·off` text.
+- Custom `.icns` app icon (currently uses py2app's generic default) for
+  Finder/Dock — separate from the menu bar icon, which already has its own
+  design (see below).
 - Notarize the release with a paid Apple Developer account to remove the
   Gatekeeper "Open Anyway" step entirely.
 
@@ -153,7 +155,7 @@ source venv/bin/activate
 python app.py
 ```
 
-You should see `TR·off` appear in your menu bar. Click it and check
+You should see a dimmed **ğ** appear in your menu bar. Click it and check
 **Enabled** to turn correction on.
 
 #### Running automatically in the background (recommended)
@@ -167,8 +169,8 @@ Instead of launching `app.py` by hand every time, register it as a per-user
 ```
 
 This writes `~/Library/LaunchAgents/com.github.eicyer.tr-autocorrect.plist`
-and starts it immediately — `TR·off` should appear in the menu bar within a
-few seconds, no Terminal window needed from then on.
+and starts it immediately — a dimmed **ğ** should appear in the menu bar
+within a few seconds, no Terminal window needed from then on.
 
 To stop the background process entirely (e.g. before uninstalling or
 updating the code):

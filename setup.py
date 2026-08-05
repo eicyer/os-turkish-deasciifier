@@ -16,7 +16,7 @@ import subprocess
 from setuptools import setup
 
 APP = ["app.py"]
-DATA_FILES = []
+DATA_FILES = ["resources/icon-on.png", "resources/icon-off.png"]
 VERSION = os.environ.get("APP_VERSION", "0.0.0")
 
 

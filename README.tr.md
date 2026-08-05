@@ -15,11 +15,13 @@ anında şuna dönüşür:
 
 Mac'inizin her yerinde çalışır — tarayıcıda, Mail'de, WhatsApp'ta, tüm
 uygulamalarda. Menü çubuğundan (ekranın sağ üst köşesindeki küçük simgeler
-sırası) tek tıkla açıp kapatabilirsiniz.
+sırası) tek tıkla açıp kapatabilirsiniz; burada küçük bir **ğ** olarak
+görünür — bu uygulamanın sizin için eklediği harfin ta kendisi.
 
-- Menü çubuğunda **TR·off** görünüyorsa uygulama şu an hiçbir şey yapmıyor
-  demektir.
-- **TR·on** görünüyorsa siz yazarken aktif olarak düzeltme yapıyordur.
+- Soluk, silik bir **ğ** uygulamanın şu an hiçbir şey yapmadığı anlamına
+  gelir.
+- Koyu, dolu bir **ğ** siz yazarken aktif olarak düzeltme yaptığı anlamına
+  gelir.
 
 Kapalıyken yazdıklarınıza kesinlikle dokunulmaz.
 
@@ -40,8 +42,8 @@ Kapalıyken yazdıklarınıza kesinlikle dokunulmaz.
      Güvenlik**'i açın, en alta doğru kaydırıp güvenlik uyarısını bulun,
      **Yine de Aç**'a tıklayın, ardından açılan pencerede **Aç**'ı
      onaylayın. Bunu yalnızca bir kez yapmanız yeterli.
-4. Menü çubuğunda **TR·off** yazısını görmelisiniz. Tıklayıp **Enabled**
-   seçeneğini işaretleyerek düzeltmeyi açın. 🎉
+4. Menü çubuğunda soluk bir **ğ** görmelisiniz. Tıklayıp **Enabled**
+   seçeneğini işaretleyerek düzeltmeyi açın — simge koyulaşır. 🎉
 5. Uygulama tuş vuruşlarınızı dinlemeye çalıştığında macOS iki izin
    isteyecektir — her istekte **Sistem Ayarları'nı Aç**'a tıklayın (veya
    oraya elle gidin) ve **TurkishAutocorrect**'i şu bölümlerde açın:
@@ -58,11 +60,12 @@ bölümler, uygulamayı kaynak koddan geliştirenler içindir.
 
 ## Kullanım
 
-1. Menü çubuğunda **TR·off** yazısına tıklayın.
-2. **Enabled**'ı işaretleyin — başlık **TR·on** olur.
+1. Menü çubuğunda **ğ** simgesine tıklayın.
+2. **Enabled**'ı işaretleyin — simge koyulaşır.
 3. Herhangi bir yerde yazın — boşluk, Enter veya noktalama işaretine
    bastığınız anda kelimeler düzeltilir.
-4. Ara vermek için **Enabled**'ın işaretini kaldırın (**TR·off**'a döner).
+4. Ara vermek için **Enabled**'ın işaretini kaldırın (simge tekrar
+   soluklaşır).
 5. **Quit** düzeltmeyi kapatır ama simge menü çubuğunda kalır — böylece onu
    tekrar açacak bir menü olmadan asla kalmazsınız; uygulamadan tamamen
    çıkmaz. **Start at Login**'i açtıysanız arka plan süreci de çalışmaya
@@ -109,9 +112,9 @@ bölümler, uygulamayı kaynak koddan geliştirenler içindir.
 
 ## İleride yapılabilecekler
 
-- Özel bir `.icns` uygulama simgesi (şu an py2app'in genel varsayılanı
-  kullanılıyor).
-- `TR·on` / `TR·off` yazısı yerine gerçek bir menü çubuğu simgesi.
+- Finder/Dock için özel bir `.icns` uygulama simgesi (şu an py2app'in genel
+  varsayılanı kullanılıyor) — menü çubuğu simgesinden ayrı, onun kendi
+  tasarımı zaten var (yukarı bakın).
 - Gatekeeper'ın "Yine de Aç" adımını tamamen ortadan kaldırmak için ücretli
   bir Apple Developer hesabıyla sürümü notarize etmek.
 
@@ -157,7 +160,7 @@ source venv/bin/activate
 python app.py
 ```
 
-Menü çubuğunda **TR·off** yazısını görmelisiniz. Tıklayıp **Enabled**'ı
+Menü çubuğunda soluk bir **ğ** görmelisiniz. Tıklayıp **Enabled**'ı
 işaretleyerek düzeltmeyi açın.
 
 #### Arka planda otomatik çalıştırma (önerilir)
@@ -172,8 +175,8 @@ açtığınızda otomatik başlatması ve çökerse yeniden başlatması
 
 Bu, `~/Library/LaunchAgents/com.github.eicyer.tr-autocorrect.plist`
 dosyasını yazar ve uygulamayı hemen başlatır — birkaç saniye içinde menü
-çubuğunda **TR·off** görünmelidir, bundan sonra Terminal penceresine gerek
-kalmaz.
+çubuğunda soluk bir **ğ** görünmelidir, bundan sonra Terminal penceresine
+gerek kalmaz.
 
 Arka plan sürecini tamamen durdurmak için (örneğin kaldırmadan veya kodu
 güncellemeden önce):
