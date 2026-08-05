@@ -33,8 +33,7 @@ Example: typing `bugun cok guzel bir gun` produces `bugün çok güzel bir gün`
 6. Want it running automatically every time you log in? Click the menu bar
    icon and check **Start at Login**.
 
-That's it — no Python, no `git clone`, no Terminal required. The rest of
-this README (below) documents running the app **from source**, which is
+The rest of this README (below) documents running the app **from source**, which is
 only relevant if you're developing or modifying it.
 
 ## How it works
