@@ -11,7 +11,9 @@ process running this script (see README.md).
 """
 
 import os
+import plistlib
 import subprocess
+import sys
 import threading
 
 import rumps
@@ -25,11 +27,70 @@ WORD_CHARS_EXTRA = "'"
 
 BOUNDARY_KEYS = (Key.space, Key.enter, Key.tab)
 
-# Must match the Label/plist filename install-launchagent.sh generates.
+# Same label install-launchagent.sh/uninstall-launchagent.sh use for the
+# source/dev workflow — kept identical so only one LaunchAgent can ever be
+# registered for this app at a time, however it was installed.
 LAUNCH_AGENT_LABEL = "com.github.eicyer.tr-autocorrect"
-LAUNCH_AGENT_PLIST = os.path.expanduser(
+LAUNCH_AGENT_PLIST_PATH = os.path.expanduser(
     f"~/Library/LaunchAgents/{LAUNCH_AGENT_LABEL}.plist"
 )
+
+
+def _launch_agent_program_arguments():
+    """Args that relaunch this exact running app, whether it's a packaged
+    .app (py2app sets sys.frozen, and the bundle's own executable is the
+    entry point) or a source checkout run via `python app.py`."""
+    if getattr(sys, "frozen", False):
+        return [sys.executable]
+    return [sys.executable, os.path.abspath(__file__)]
+
+
+def _is_launch_agent_installed():
+    return os.path.exists(LAUNCH_AGENT_PLIST_PATH)
+
+
+def _install_launch_agent():
+    os.makedirs(os.path.dirname(LAUNCH_AGENT_PLIST_PATH), exist_ok=True)
+    plist = {
+        "Label": LAUNCH_AGENT_LABEL,
+        "ProgramArguments": _launch_agent_program_arguments(),
+        "RunAtLoad": True,
+        "KeepAlive": True,
+        "ThrottleInterval": 10,
+        "ProcessType": "Interactive",
+        "LimitLoadToSessionType": "Aqua",
+    }
+    with open(LAUNCH_AGENT_PLIST_PATH, "wb") as f:
+        plistlib.dump(plist, f)
+
+    uid = os.getuid()
+    bootstrapped = subprocess.run(
+        ["launchctl", "bootstrap", f"gui/{uid}", LAUNCH_AGENT_PLIST_PATH],
+        capture_output=True,
+    )
+    if bootstrapped.returncode != 0:
+        # Older launchctl without `bootstrap`, or agent already loaded.
+        subprocess.run(
+            ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST_PATH],
+            capture_output=True,
+        )
+        subprocess.run(["launchctl", "load", "-w", LAUNCH_AGENT_PLIST_PATH], check=True)
+
+
+def _uninstall_launch_agent():
+    if not _is_launch_agent_installed():
+        return
+    uid = os.getuid()
+    booted_out = subprocess.run(
+        ["launchctl", "bootout", f"gui/{uid}/{LAUNCH_AGENT_LABEL}"],
+        capture_output=True,
+    )
+    if booted_out.returncode != 0:
+        subprocess.run(
+            ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST_PATH],
+            capture_output=True,
+        )
+    os.remove(LAUNCH_AGENT_PLIST_PATH)
 
 
 class TurkishAutocorrectApp(rumps.App):
@@ -52,8 +113,14 @@ class TurkishAutocorrectApp(rumps.App):
         self.toggle_item = rumps.MenuItem("Enabled", callback=self.toggle)
         self.toggle_item.state = False
 
+        self.start_at_login_item = rumps.MenuItem(
+            "Start at Login", callback=self.toggle_start_at_login
+        )
+        self.start_at_login_item.state = _is_launch_agent_installed()
+
         self.menu = [
             self.toggle_item,
+            self.start_at_login_item,
             None,
             rumps.MenuItem("Quit", callback=self.quit_app),
         ]
@@ -71,6 +138,16 @@ class TurkishAutocorrectApp(rumps.App):
             self.buffer = ""
         self.title = "TR·on" if self.enabled else "TR·off"
 
+    def toggle_start_at_login(self, sender):
+        try:
+            if sender.state:
+                _uninstall_launch_agent()
+            else:
+                _install_launch_agent()
+        except (OSError, subprocess.CalledProcessError) as exc:
+            rumps.alert(
+                title="Start at Login",
+                message=f"Couldn't update the login item: {exc}",
     def quit_app(self, sender):
         """Stop the listener, unload the LaunchAgent, and exit the process."""
         self.listener.stop()
@@ -102,6 +179,20 @@ class TurkishAutocorrectApp(rumps.App):
                 ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST],
                 capture_output=True,
             )
+            return
+        sender.state = not sender.state
+
+    def quit_app(self, sender):
+        # The menu bar icon is meant to stay put — "Quit" just disables
+        # correction (like unchecking Enabled) rather than exiting the
+        # process, so you're never stuck without a menu to re-enable from.
+        # To actually stop the background process, use
+        # uninstall-launchagent.sh (or Ctrl+C if running app.py manually).
+        self.enabled = False
+        self.toggle_item.state = False
+        with self.buffer_lock:
+            self.buffer = ""
+        self.title = "TR·off"
 
     # -- keystroke handling ----------------------------------------------
 

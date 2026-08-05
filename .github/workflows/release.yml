@@ -1,0 +1,68 @@
+name: Release
+
+# Push a tag like v0.1.0 to build TurkishAutocorrect.app, package it as a
+# DMG, and publish it on the GitHub Release for that tag. No Apple
+# Developer account is used, so the build is ad-hoc signed only (required
+# just to run on Apple Silicon) — not notarized. Gatekeeper will still warn
+# on first launch; see the README's Download section for the "Open Anyway"
+# steps end users need to follow.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install py2app
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build .app with py2app
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: python3 setup.py py2app
+
+      - name: Ad-hoc codesign
+        run: codesign --deep --force -s - "dist/TurkishAutocorrect.app"
+
+      - name: Build DMG
+        run: |
+          STAGING_DIR="$(mktemp -d)/TurkishAutocorrect"
+          mkdir -p "$STAGING_DIR"
+          cp -R "dist/TurkishAutocorrect.app" "$STAGING_DIR/"
+          ln -s /Applications "$STAGING_DIR/Applications"
+          hdiutil create -volname "TurkishAutocorrect" \
+            -srcfolder "$STAGING_DIR" \
+            -ov -format UDZO \
+            "TurkishAutocorrect.dmg"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "TurkishAutocorrect.dmg" \
+            --title "TurkishAutocorrect ${{ steps.version.outputs.tag }}" \
+            --generate-notes
