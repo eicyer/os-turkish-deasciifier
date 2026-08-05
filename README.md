@@ -6,6 +6,37 @@ menu bar; when off, typing is completely untouched.
 
 Example: typing `bugun cok guzel bir gun` produces `bugün çok güzel bir gün`.
 
+## Download (for everyone — no Terminal needed)
+
+1. Go to the [latest release](https://github.com/eicyer/os-turkish-deasciifier/releases/latest)
+   and download `TurkishAutocorrect.dmg`.
+2. Open the downloaded `.dmg`, then drag **TurkishAutocorrect** into the
+   **Applications** folder shortcut shown alongside it.
+3. Open **Applications** and double-click **TurkishAutocorrect**.
+   - Since this app isn't sold through the App Store or paid-signed by
+     Apple, macOS will likely block it the first time with a message like
+     *"Apple could not verify TurkishAutocorrect is free of malware."*
+     This is expected — to allow it: open **System Settings → Privacy &
+     Security**, scroll down to the security notice near the bottom, and
+     click **Open Anyway**, then confirm **Open** in the dialog that
+     appears. You only need to do this once.
+4. You should see `TR·off` appear in the menu bar. Click it and check
+   **Enabled** to turn correction on.
+5. The first time it tries to listen to your keystrokes, macOS will ask for
+   two permissions — click **Open System Settings** on each prompt (or go
+   there manually) and turn **TurkishAutocorrect** on under:
+   - **Privacy & Security → Accessibility**
+   - **Privacy & Security → Input Monitoring**
+
+   If you don't see a prompt and correction just does nothing, check both
+   of those lists directly — the toggle is probably still off.
+6. Want it running automatically every time you log in? Click the menu bar
+   icon and check **Start at Login**.
+
+That's it — no Python, no `git clone`, no Terminal required. The rest of
+this README (below) documents running the app **from source**, which is
+only relevant if you're developing or modifying it.
+
 ## How it works
 
 - **Menu bar toggle** ([`rumps`](https://github.com/jaredks/rumps)) — an
@@ -28,7 +59,13 @@ Note: this package isn't published on PyPI under an installable name, so
 `requirements.txt` pulls it straight from GitHub via
 `git+https://github.com/emres/turkish-deasciifier.git`.
 
-## Setup
+## Running from source (developers / contributors)
+
+Everything below this point is for building or modifying the app. If you
+just want to use it, see [Download](#download-for-everyone--no-terminal-needed)
+above.
+
+### Setup
 
 ```bash
 cd ~/Desktop/tr-autocorrect
@@ -39,7 +76,7 @@ pip install -r requirements.txt
 
 (Already done in this session — the venv at `venv/` is ready to go.)
 
-## Running it
+### Running it
 
 ```bash
 source venv/bin/activate
@@ -49,7 +86,7 @@ python app.py
 You should see `TR·off` appear in your menu bar. Click it and check
 **Enabled** to turn correction on.
 
-### Running automatically in the background (recommended)
+#### Running automatically in the background (recommended)
 
 Instead of launching `app.py` by hand every time, you can register it as a
 per-user **LaunchAgent** so macOS starts it automatically at login and
@@ -99,7 +136,13 @@ until you grant permissions (see below) — you'll likely get a system
 prompt, or correction will just silently do nothing until you grant access
 manually.
 
-## Granting macOS permissions
+### Granting macOS permissions (running from source)
+
+This section is for the `python app.py` / venv workflow above, where the
+permission has to be granted to the raw interpreter binary. If you
+installed the downloaded `.app` instead, use the simpler steps in
+[Download](#download-for-everyone--no-terminal-needed) — the permission
+prompt there is just labeled **TurkishAutocorrect**.
 
 Two separate privacy permissions are involved:
 
@@ -160,6 +203,7 @@ With the app running and **Enabled** checked:
 
 ## Later / nice-to-have
 
-- Package as a standalone `.app` with `py2app` so it doesn't need to run
-  from a terminal, and can be added to Login Items.
+- Custom `.icns` app icon (currently uses py2app's generic default).
 - Menu bar icon (vs. text title) for the on/off indicator.
+- Notarize the release with a paid Apple Developer account to remove the
+  Gatekeeper "Open Anyway" step entirely.
