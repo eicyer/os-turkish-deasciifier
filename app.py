@@ -139,6 +139,7 @@ class TurkishAutocorrectApp(rumps.App):
         self.title = "TR·on" if self.enabled else "TR·off"
 
     def toggle_start_at_login(self, sender):
+        """Register/unregister the self-referencing login LaunchAgent."""
         try:
             if sender.state:
                 _uninstall_launch_agent()
@@ -148,46 +149,20 @@ class TurkishAutocorrectApp(rumps.App):
             rumps.alert(
                 title="Start at Login",
                 message=f"Couldn't update the login item: {exc}",
-    def quit_app(self, sender):
-        """Stop the listener, unload the LaunchAgent, and exit the process."""
-        self.listener.stop()
-        self._unload_launch_agent()
-        # rumps.quit_application() just calls NSApplication.terminate_(),
-        # which for a plain (non-bundled) script can tear down the menu bar
-        # icon without actually killing the process — leaving the keystroke
-        # listener running invisibly in the background. Force the issue.
-        os._exit(0)
-
-    def _unload_launch_agent(self):
-        """Disable the KeepAlive LaunchAgent so Quit actually stays quit."""
-        # If we're running as the KeepAlive LaunchAgent (see
-        # install-launchagent.sh), launchd will instantly relaunch us the
-        # moment this process exits unless we tell it to stop first. If
-        # we're just a plain `python app.py` run with no LaunchAgent
-        # installed, both commands fail harmlessly and Quit behaves as a
-        # normal exit.
-        if not os.path.exists(LAUNCH_AGENT_PLIST):
-            return
-        uid = os.getuid()
-        target = f"gui/{uid}/{LAUNCH_AGENT_LABEL}"
-        result = subprocess.run(
-            ["launchctl", "bootout", target],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            subprocess.run(
-                ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST],
-                capture_output=True,
             )
             return
         sender.state = not sender.state
 
     def quit_app(self, sender):
-        # The menu bar icon is meant to stay put — "Quit" just disables
-        # correction (like unchecking Enabled) rather than exiting the
-        # process, so you're never stuck without a menu to re-enable from.
-        # To actually stop the background process, use
-        # uninstall-launchagent.sh (or Ctrl+C if running app.py manually).
+        """Disable correction but keep the process and menu bar icon alive.
+
+        The menu bar icon is meant to stay put — "Quit" just disables
+        correction (like unchecking Enabled) rather than exiting the
+        process, so you're never stuck without a menu to re-enable from.
+        To actually stop the background process, uncheck Start at Login
+        (or use uninstall-launchagent.sh / Ctrl+C if running app.py
+        manually).
+        """
         self.enabled = False
         self.toggle_item.state = False
         with self.buffer_lock:
