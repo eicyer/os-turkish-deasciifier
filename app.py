@@ -78,18 +78,16 @@ def _install_launch_agent():
 
 
 def _uninstall_launch_agent():
+    """Stop the app from auto-starting at future logins only.
+
+    Deliberately does NOT launchctl bootout/unload the current job — that
+    would kill the running process immediately, since it's the very job
+    being unregistered. Start at Login only controls whether launchd
+    relaunches the app later; it must stay independent of whether the app
+    (or correction) is currently enabled/running.
+    """
     if not _is_launch_agent_installed():
         return
-    uid = os.getuid()
-    booted_out = subprocess.run(
-        ["launchctl", "bootout", f"gui/{uid}/{LAUNCH_AGENT_LABEL}"],
-        capture_output=True,
-    )
-    if booted_out.returncode != 0:
-        subprocess.run(
-            ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST_PATH],
-            capture_output=True,
-        )
     os.remove(LAUNCH_AGENT_PLIST_PATH)
 
 
@@ -111,7 +109,7 @@ ICON_OFF = _resource_path("icon-off.png")
 class TurkishAutocorrectApp(rumps.App):
     """Menu bar app that live-corrects ASCII-typed Turkish system-wide.
 
-    Shows a "ğ" template icon in the menu bar — solid when enabled, dimmed
+    Shows a "TR" template icon in the menu bar — solid when enabled, dimmed
     when off. While enabled, a global keystroke listener buffers the word
     being typed and replaces it with its deasciified form at each word
     boundary.

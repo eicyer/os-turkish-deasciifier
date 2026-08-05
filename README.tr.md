@@ -15,12 +15,12 @@ anında şuna dönüşür:
 
 Mac'inizin her yerinde çalışır — tarayıcıda, Mail'de, WhatsApp'ta, tüm
 uygulamalarda. Menü çubuğundan (ekranın sağ üst köşesindeki küçük simgeler
-sırası) tek tıkla açıp kapatabilirsiniz; burada küçük bir **ğ** olarak
-görünür — bu uygulamanın sizin için eklediği harfin ta kendisi.
+sırası) tek tıkla açıp kapatabilirsiniz; burada küçük bir **TR** simgesi
+olarak görünür.
 
-- Soluk, silik bir **ğ** uygulamanın şu an hiçbir şey yapmadığı anlamına
+- Soluk, silik bir **TR** uygulamanın şu an hiçbir şey yapmadığı anlamına
   gelir.
-- Koyu, dolu bir **ğ** siz yazarken aktif olarak düzeltme yaptığı anlamına
+- Koyu, dolu bir **TR** siz yazarken aktif olarak düzeltme yaptığı anlamına
   gelir.
 
 Kapalıyken yazdıklarınıza kesinlikle dokunulmaz.
@@ -42,7 +42,7 @@ Kapalıyken yazdıklarınıza kesinlikle dokunulmaz.
      Güvenlik**'i açın, en alta doğru kaydırıp güvenlik uyarısını bulun,
      **Yine de Aç**'a tıklayın, ardından açılan pencerede **Aç**'ı
      onaylayın. Bunu yalnızca bir kez yapmanız yeterli.
-4. Menü çubuğunda soluk bir **ğ** görmelisiniz. Tıklayıp **Enabled**
+4. Menü çubuğunda soluk bir **TR** görmelisiniz. Tıklayıp **Enabled**
    seçeneğini işaretleyerek düzeltmeyi açın — simge koyulaşır. 🎉
 5. Uygulama tuş vuruşlarınızı dinlemeye çalıştığında macOS iki izin
    isteyecektir — her istekte **Sistem Ayarları'nı Aç**'a tıklayın (veya
@@ -60,7 +60,7 @@ bölümler, uygulamayı kaynak koddan geliştirenler içindir.
 
 ## Kullanım
 
-1. Menü çubuğunda **ğ** simgesine tıklayın.
+1. Menü çubuğunda **TR** simgesine tıklayın.
 2. **Enabled**'ı işaretleyin — simge koyulaşır.
 3. Herhangi bir yerde yazın — boşluk, Enter veya noktalama işaretine
    bastığınız anda kelimeler düzeltilir.
@@ -160,7 +160,7 @@ source venv/bin/activate
 python app.py
 ```
 
-Menü çubuğunda soluk bir **ğ** görmelisiniz. Tıklayıp **Enabled**'ı
+Menü çubuğunda soluk bir **TR** görmelisiniz. Tıklayıp **Enabled**'ı
 işaretleyerek düzeltmeyi açın.
 
 #### Arka planda otomatik çalıştırma (önerilir)
@@ -175,7 +175,7 @@ açtığınızda otomatik başlatması ve çökerse yeniden başlatması
 
 Bu, `~/Library/LaunchAgents/com.github.eicyer.tr-autocorrect.plist`
 dosyasını yazar ve uygulamayı hemen başlatır — birkaç saniye içinde menü
-çubuğunda soluk bir **ğ** görünmelidir, bundan sonra Terminal penceresine
+çubuğunda soluk bir **TR** görünmelidir, bundan sonra Terminal penceresine
 gerek kalmaz.
 
 Arka plan sürecini tamamen durdurmak için (örneğin kaldırmadan veya kodu
