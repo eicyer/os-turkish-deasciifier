@@ -64,17 +64,21 @@ def _install_launch_agent():
         plistlib.dump(plist, f)
 
     uid = os.getuid()
-    bootstrapped = subprocess.run(
+    # Best-effort: also try to start it running under launchd right now,
+    # not just at next login. Deliberately never falls back to
+    # `launchctl unload`/`load` here — bootstrap fails with "already
+    # bootstrapped" whenever this label is already loaded, which is
+    # exactly the case when the running process *is* that job (e.g.
+    # Start at Login was toggled off, which only deletes the plist
+    # without unloading the job, then toggled back on). Unloading it
+    # would kill the current process immediately — same class of bug as
+    # the one fixed for _uninstall_launch_agent() above. Worst case if
+    # bootstrap fails: the freshly written plist just takes effect at the
+    # next login instead of immediately.
+    subprocess.run(
         ["launchctl", "bootstrap", f"gui/{uid}", LAUNCH_AGENT_PLIST_PATH],
         capture_output=True,
     )
-    if bootstrapped.returncode != 0:
-        # Older launchctl without `bootstrap`, or agent already loaded.
-        subprocess.run(
-            ["launchctl", "unload", "-w", LAUNCH_AGENT_PLIST_PATH],
-            capture_output=True,
-        )
-        subprocess.run(["launchctl", "load", "-w", LAUNCH_AGENT_PLIST_PATH], check=True)
 
 
 def _uninstall_launch_agent():
