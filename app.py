@@ -124,6 +124,11 @@ class TurkishAutocorrectApp(rumps.App):
 
         self.enabled = False
         self.buffer = ""
+        # The last word we flushed, kept only as read-only context for
+        # deasciifying the *next* word (see flush_word) — never re-edited,
+        # since by the time it's set the cursor has already moved past it
+        # and we can no longer safely touch it.
+        self.previous_word = ""
         self.injecting = False  # true while we're posting our own synthetic keys
         self.buffer_lock = threading.Lock()
         self.controller = Controller()
@@ -154,6 +159,7 @@ class TurkishAutocorrectApp(rumps.App):
         sender.state = self.enabled
         with self.buffer_lock:
             self.buffer = ""
+            self.previous_word = ""
         self.icon = ICON_ON if self.enabled else ICON_OFF
 
     def toggle_start_at_login(self, sender):
@@ -185,6 +191,7 @@ class TurkishAutocorrectApp(rumps.App):
         self.toggle_item.state = False
         with self.buffer_lock:
             self.buffer = ""
+            self.previous_word = ""
         self.icon = ICON_OFF
 
     # -- keystroke handling ----------------------------------------------
@@ -208,6 +215,7 @@ class TurkishAutocorrectApp(rumps.App):
             print(f"[turkish-autocorrect] error handling key {key!r}: {exc}")
             with self.buffer_lock:
                 self.buffer = ""
+                self.previous_word = ""
 
     def _handle_key(self, key):
         """Buffer word characters; flush or reset on everything else."""
@@ -230,7 +238,14 @@ class TurkishAutocorrectApp(rumps.App):
         # Special (non-character) keys.
         if key == Key.backspace:
             with self.buffer_lock:
-                self.buffer = self.buffer[:-1]
+                if self.buffer:
+                    self.buffer = self.buffer[:-1]
+                else:
+                    # Backspacing past the start of the current word reaches
+                    # into already-committed text we're no longer tracking
+                    # accurately — stop trusting it as context for the next
+                    # word (see flush_word).
+                    self.previous_word = ""
         elif key in BOUNDARY_KEYS:
             # Same reasoning as above: space/enter/tab has usually already
             # been typed by the OS by the time this callback runs.
@@ -240,6 +255,7 @@ class TurkishAutocorrectApp(rumps.App):
             # so abandon the buffer rather than risk corrupting text.
             with self.buffer_lock:
                 self.buffer = ""
+                self.previous_word = ""
 
     def flush_word(self, boundary_char=None, boundary_key=None):
         """Deasciify the buffered word and replace it in-place if it changed.
@@ -247,14 +263,28 @@ class TurkishAutocorrectApp(rumps.App):
         ``boundary_char``/``boundary_key`` is the keystroke that ended the
         word (space, punctuation, enter, ...); it's passed along so the
         replacement can retype it after the corrected word.
+
+        The deasciifier is context-based — it looks a few characters into
+        the surrounding words to disambiguate things like "mi" -> "mı"
+        (e.g. "misin" alone is ambiguous, but "hazir misin" isn't). We only
+        ever have the current word in the live buffer, so we prepend the
+        previous word purely as read-only context and then take just the
+        tail of the result back — the previous word itself is never
+        touched, since the cursor has already moved past it.
         """
         with self.buffer_lock:
             word, self.buffer = self.buffer, ""
+            previous_word = self.previous_word
 
         if not word:
             return
 
-        corrected = Deasciifier(word).convert_to_turkish()
+        context = f"{previous_word} {word}" if previous_word else word
+        corrected = Deasciifier(context).convert_to_turkish()[-len(word):]
+
+        with self.buffer_lock:
+            self.previous_word = corrected
+
         if corrected != word:
             self.inject_replacement(word, corrected, boundary_char, boundary_key)
 
